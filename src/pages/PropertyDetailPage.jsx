@@ -85,6 +85,7 @@ export default function PropertyDetailPage() {
   const handleSave = () => {
     updateProperty(id, {
       ...form,
+      address: form.address_line1 || '',
       surface: Number(form.surface_m2) || 0,
       rooms: Number(form.nb_rooms) || 0,
       floor: form.floor !== '' ? Number(form.floor) : null,

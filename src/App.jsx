@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Sidebar from './components/layout/Sidebar'
 import { useAuthStore } from './store/authStore'
@@ -32,6 +32,30 @@ export default function App() {
   const fetchInvoices = useInvoiceStore((s) => s.fetchInvoices)
   const fetchPayments = usePaymentStore((s) => s.fetchPayments)
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('sidebar-collapsed') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024)
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const handleToggleCollapse = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev
+      try { localStorage.setItem('sidebar-collapsed', String(next)) } catch {}
+      return next
+    })
+  }, [])
+
   useEffect(() => {
     fetchStructures()
     fetchProperties()
@@ -41,12 +65,22 @@ export default function App() {
     fetchPayments()
   }, [fetchStructures, fetchProperties, fetchTenants, fetchLeases, fetchInvoices, fetchPayments])
 
-  return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar user={user} onLogout={logout} />
+  const sidebarWidth = isDesktop ? (sidebarCollapsed ? 72 : 260) : 0
 
-      <main className="flex-1 lg:ml-64">
-        <div className="p-6 lg:p-8">
+  return (
+    <div className="min-h-screen">
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+        user={user}
+        onLogout={logout}
+      />
+
+      <div
+        className="min-h-screen content-transition"
+        style={{ paddingLeft: sidebarWidth }}
+      >
+        <main style={{ padding: '32px', maxWidth: '1600px' }}>
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/structures" element={<StructuresPage />} />
@@ -62,8 +96,8 @@ export default function App() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

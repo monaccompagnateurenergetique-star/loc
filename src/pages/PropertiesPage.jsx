@@ -80,7 +80,7 @@ export default function PropertiesPage() {
       result = result.filter(
         (p) =>
           p.name?.toLowerCase().includes(q) ||
-          p.address?.toLowerCase().includes(q) ||
+          (p.address || p.address_line1 || '')?.toLowerCase().includes(q) ||
           p.city?.toLowerCase().includes(q)
       )
     }
@@ -125,6 +125,7 @@ export default function PropertiesPage() {
     if (!form.name.trim()) return
     const data = {
       ...form,
+      address: form.address_line1 || '',
       surface: Number(form.surface_m2) || 0,
       rooms: Number(form.nb_rooms) || 0,
       floor: form.floor ? Number(form.floor) : null,

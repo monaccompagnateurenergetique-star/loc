@@ -56,7 +56,7 @@ export default function StructuresPage() {
       (s) =>
         s.name?.toLowerCase().includes(q) ||
         s.siret?.toLowerCase().includes(q) ||
-        s.address?.toLowerCase().includes(q) ||
+        (s.address || s.address_line1 || '')?.toLowerCase().includes(q) ||
         s.type?.toLowerCase().includes(q)
     )
   }, [structures, search])
@@ -104,10 +104,14 @@ export default function StructuresPage() {
 
   const handleSave = () => {
     if (!form.name.trim()) return
+    const data = {
+      ...form,
+      address: form.address_line1 || '',
+    }
     if (editingId) {
-      updateStructure(editingId, form)
+      updateStructure(editingId, data)
     } else {
-      createStructure(form)
+      createStructure(data)
     }
     setShowModal(false)
     setForm(emptyForm)

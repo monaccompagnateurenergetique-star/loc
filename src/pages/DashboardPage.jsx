@@ -8,6 +8,10 @@ import {
   HiOutlineChartPie,
   HiOutlineDocumentText,
   HiOutlineHomeModern,
+  HiOutlineChartBarSquare,
+  HiOutlineExclamationCircle,
+  HiOutlineCalendarDays,
+  HiOutlineCheckCircle,
 } from 'react-icons/hi2'
 import {
   BarChart,
@@ -85,7 +89,7 @@ export default function DashboardPage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-8"
     >
       <PageHeader
         title="Tableau de bord"
@@ -93,40 +97,46 @@ export default function DashboardPage() {
       />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <Stat
           label="Revenus du mois"
           value={formatCurrency(stats.totalRevenue || 0)}
           icon={HiOutlineBanknotes}
           trend="up"
+          color="primary"
         />
         <Stat
           label="Encaissements du mois"
           value={formatCurrency(stats.totalCollected || 0)}
           icon={HiOutlineArrowTrendingUp}
           trend="up"
+          color="success"
         />
         <Stat
           label="Impayes en cours"
           value={formatCurrency(stats.totalOutstanding || 0)}
           icon={HiOutlineExclamationTriangle}
           trend={stats.totalOutstanding > 0 ? 'down' : 'neutral'}
+          color="danger"
         />
         <Stat
           label="Taux d'occupation"
           value={`${stats.occupancyRate || 0} %`}
           icon={HiOutlineChartPie}
           trend="up"
+          color="primary"
         />
         <Stat
           label="Baux actifs"
           value={stats.activeLeasesCount || 0}
           icon={HiOutlineDocumentText}
+          color="warning"
         />
         <Stat
           label="Biens geres"
           value={properties.length}
           icon={HiOutlineHomeModern}
+          color="success"
         />
       </div>
 
@@ -134,20 +144,24 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Revenue Bar Chart */}
         <Card>
-          <h3 className="mb-4 text-sm font-semibold text-slate-900">Revenus par mois (12 derniers mois)</h3>
+          <div className="mb-5 flex items-center gap-2">
+            <HiOutlineChartBarSquare className="h-5 w-5 text-primary-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Revenus par mois</h3>
+            <span className="text-xs text-slate-400">(12 derniers mois)</span>
+          </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.revenueByMonth || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v} €`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v} \u20AC`} axisLine={false} tickLine={false} />
                 <Tooltip
                   formatter={(value) => formatCurrency(value)}
-                  contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0' }}
+                  contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}
                 />
                 <Legend />
-                <Bar dataKey="expected" name="Facture" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="collected" name="Encaisse" fill="#c7d2fe" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expected" name="Facture" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="collected" name="Encaisse" fill="#c7d2fe" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -155,7 +169,10 @@ export default function DashboardPage() {
 
         {/* Occupancy Pie Chart */}
         <Card>
-          <h3 className="mb-4 text-sm font-semibold text-slate-900">Taux d'occupation</h3>
+          <div className="mb-5 flex items-center gap-2">
+            <HiOutlineChartPie className="h-5 w-5 text-primary-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Taux d'occupation</h3>
+          </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -185,33 +202,47 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Overdue invoices */}
         <Card>
-          <h3 className="mb-4 text-sm font-semibold text-slate-900">Factures en retard</h3>
+          <div className="mb-5 flex items-center gap-2">
+            <HiOutlineExclamationCircle className="h-5 w-5 text-red-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Factures en retard</h3>
+            {overdueWithDetails.length > 0 && (
+              <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-100 px-1.5 text-[11px] font-bold text-red-600">
+                {overdueWithDetails.length}
+              </span>
+            )}
+          </div>
           {overdueWithDetails.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">Aucun impaye en cours</p>
+            <div className="flex flex-col items-center py-10">
+              <HiOutlineCheckCircle className="mb-3 h-10 w-10 text-emerald-300" />
+              <p className="text-sm font-medium text-slate-400">Aucun impaye en cours</p>
+              <p className="mt-1 text-xs text-slate-300">Tous les paiements sont a jour</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-100 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                    <th className="pb-2 pr-4">Locataire</th>
-                    <th className="pb-2 pr-4">Bien</th>
-                    <th className="pb-2 pr-4">Montant</th>
-                    <th className="pb-2">Retard</th>
+                  <tr className="border-b border-slate-100 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    <th className="pb-3 pr-4">Locataire</th>
+                    <th className="pb-3 pr-4">Bien</th>
+                    <th className="pb-3 pr-4">Montant</th>
+                    <th className="pb-3">Retard</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {overdueWithDetails.map((inv) => (
+                <tbody>
+                  {overdueWithDetails.map((inv, idx) => (
                     <tr
                       key={inv.id}
-                      className="cursor-pointer text-sm hover:bg-slate-50"
+                      className={`cursor-pointer text-sm transition-colors hover:bg-slate-50 ${
+                        idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
+                      }`}
                       onClick={() => navigate(`/invoices`)}
                     >
-                      <td className="py-2 pr-4 font-medium text-slate-900">
+                      <td className="rounded-l-lg py-3 pr-4 font-medium text-slate-900">
                         {inv.tenant ? `${inv.tenant.first_name} ${inv.tenant.last_name}` : '-'}
                       </td>
-                      <td className="py-2 pr-4 text-slate-600">{inv.property?.name || '-'}</td>
-                      <td className="py-2 pr-4 font-medium text-red-600">{formatCurrency(inv.remaining)}</td>
-                      <td className="py-2">
+                      <td className="py-3 pr-4 text-slate-600">{inv.property?.name || '-'}</td>
+                      <td className="py-3 pr-4 font-semibold text-red-600">{formatCurrency(inv.remaining)}</td>
+                      <td className="rounded-r-lg py-3">
                         <Badge variant="danger">{inv.daysOverdue}j</Badge>
                       </td>
                     </tr>
@@ -224,22 +255,30 @@ export default function DashboardPage() {
 
         {/* Expiring leases */}
         <Card>
-          <h3 className="mb-4 text-sm font-semibold text-slate-900">Baux arrivant a echeance (90 jours)</h3>
+          <div className="mb-5 flex items-center gap-2">
+            <HiOutlineCalendarDays className="h-5 w-5 text-amber-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Baux arrivant a echeance</h3>
+            <span className="text-xs text-slate-400">(90 jours)</span>
+          </div>
           {expiringWithDetails.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">Aucun bail arrivant a echeance prochainement</p>
+            <div className="flex flex-col items-center py-10">
+              <HiOutlineCheckCircle className="mb-3 h-10 w-10 text-emerald-300" />
+              <p className="text-sm font-medium text-slate-400">Aucun bail arrivant a echeance</p>
+              <p className="mt-1 text-xs text-slate-300">Pas d'action requise prochainement</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {expiringWithDetails.map((lease) => (
                 <div
                   key={lease.id}
-                  className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-100 p-3 transition-colors hover:bg-slate-50"
+                  className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-100 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                   onClick={() => navigate(`/leases/${lease.id}`)}
                 >
                   <div>
-                    <p className="text-sm font-medium text-slate-900">
+                    <p className="text-sm font-semibold text-slate-900">
                       {lease.tenant ? `${lease.tenant.first_name} ${lease.tenant.last_name}` : '-'}
                     </p>
-                    <p className="text-xs text-slate-500">{lease.property?.name || '-'}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{lease.property?.name || '-'}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-slate-600">{formatDate(lease.end_date)}</p>

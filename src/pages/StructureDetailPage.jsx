@@ -75,7 +75,10 @@ export default function StructureDetailPage() {
   }
 
   const handleSave = () => {
-    updateStructure(id, form)
+    updateStructure(id, {
+      ...form,
+      address: form.address_line1 || '',
+    })
     setShowEdit(false)
   }
 

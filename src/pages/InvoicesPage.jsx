@@ -19,8 +19,10 @@ import { usePaymentStore } from '../store/paymentStore'
 import { useTenantStore } from '../store/tenantStore'
 import { usePropertyStore } from '../store/propertyStore'
 import { useStructureStore } from '../store/structureStore'
+import { useLeaseStore } from '../store/leaseStore'
 import { INVOICE_STATUSES, PAYMENT_METHODS } from '../lib/constants'
 import { formatCurrency, formatDate } from '../lib/formatters'
+import { generateQuittancePDF } from '../lib/generateQuittancePDF'
 
 const currentYear = new Date().getFullYear()
 const yearOptions = Array.from({ length: 3 }, (_, i) => ({
@@ -54,6 +56,7 @@ export default function InvoicesPage() {
   const tenants = useTenantStore((s) => s.tenants)
   const properties = usePropertyStore((s) => s.properties)
   const structures = useStructureStore((s) => s.structures)
+  const leases = useLeaseStore((s) => s.leases)
 
   const [filterYear, setFilterYear] = useState(String(currentYear))
   const [filterMonth, setFilterMonth] = useState('')
@@ -123,6 +126,14 @@ export default function InvoicesPage() {
       label: 'Actions',
       render: (_, row) => (
         <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={HiOutlineArrowDownTray}
+            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(row) }}
+          >
+            PDF
+          </Button>
           {row.status !== 'paid' && (
             <Button
               variant="ghost"
@@ -137,6 +148,14 @@ export default function InvoicesPage() {
       ),
     },
   ]
+
+  const handleDownloadPDF = (invoice) => {
+    const tenant = tenants.find((t) => t.id === invoice.tenant_id)
+    const property = properties.find((p) => p.id === invoice.property_id)
+    const structure = structures.find((s) => s.id === invoice.structure_id)
+    const lease = leases.find((l) => l.id === invoice.lease_id)
+    generateQuittancePDF({ invoice, tenant, property, structure, lease })
+  }
 
   const handleGenerate = () => {
     const result = generateMonthlyInvoices(Number(genYear), Number(genMonth))
