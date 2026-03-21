@@ -98,7 +98,7 @@ export default function DashboardPage() {
       />
 
       {/* Stat cards - responsive grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 min-w-0">
         <Stat
           label="Revenus du mois"
           value={formatCurrency(stats.totalRevenue || 0)}

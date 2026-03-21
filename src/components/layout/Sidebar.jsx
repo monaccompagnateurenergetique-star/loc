@@ -70,13 +70,13 @@ export default function Sidebar({ collapsed, onToggleCollapse, user, onLogout })
 
   return (
     <aside
-      className="fixed left-0 top-0 z-30 hidden h-screen lg:block"
+      className="fixed left-0 top-0 z-30 hidden h-screen overflow-hidden lg:block"
       style={{
         width: collapsed ? 72 : 260,
         transition: 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
-      <div className="flex h-full flex-col" style={{ background: 'linear-gradient(180deg, #0f172a 0%, #0c1222 100%)' }}>
+      <div className="flex h-full w-[260px] flex-col" style={{ background: 'linear-gradient(180deg, #0f172a 0%, #0c1222 100%)' }}>
         {/* Logo */}
         <div className={`flex h-[68px] items-center border-b border-white/[0.06] ${collapsed ? 'justify-center px-3' : 'gap-3 px-5'}`}>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-violet-500 shadow-lg shadow-primary-600/25">

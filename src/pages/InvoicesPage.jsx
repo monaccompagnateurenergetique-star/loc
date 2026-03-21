@@ -96,7 +96,7 @@ export default function InvoicesPage() {
   }, [invoices, filterYear, filterMonth, filterStatus, filterStructure])
 
   const columns = [
-    { key: 'id', label: 'N°', render: (v) => <span className="font-mono text-xs text-slate-500">{v?.slice(-8)}</span> },
+    { key: 'id', label: 'N°', render: (v) => <span className="font-mono text-[11px] text-slate-500">{v?.slice(-6)}</span> },
     {
       key: 'tenant_id',
       label: 'Locataire',

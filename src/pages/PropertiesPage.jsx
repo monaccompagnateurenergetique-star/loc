@@ -225,12 +225,7 @@ export default function PropertiesPage() {
             const badgeVariant = statusColors[property.status] || 'neutral'
 
             return (
-              <motion.div
-                key={property.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: idx * 0.03 }}
-              >
+              <div key={property.id}>
                 <Card hover className="h-full flex flex-col">
                   <div className="flex-1" onClick={() => navigate(`/properties/${property.id}`)}>
                     {/* Header */}
@@ -282,7 +277,7 @@ export default function PropertiesPage() {
                     </Button>
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             )
           })}
         </div>

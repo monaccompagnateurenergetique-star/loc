@@ -69,7 +69,7 @@ export default function App() {
   const sidebarWidth = isDesktop ? (sidebarCollapsed ? 72 : 260) : 0
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       {/* Desktop sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -80,14 +80,16 @@ export default function App() {
 
       {/* Main content */}
       <div
-        className="min-h-screen content-transition"
-        style={{ paddingLeft: sidebarWidth }}
+        className="min-h-screen content-transition overflow-hidden"
+        style={{
+          marginLeft: sidebarWidth,
+          width: `calc(100% - ${sidebarWidth}px)`,
+        }}
       >
         <main
-          className="mx-auto pb-24 lg:pb-8"
+          className="w-full overflow-x-hidden"
           style={{
-            padding: isDesktop ? '28px 32px' : '16px 16px 100px 16px',
-            maxWidth: '1600px',
+            padding: isDesktop ? '24px 24px 32px' : '16px 12px 100px 12px',
           }}
         >
           <Routes>

@@ -36,39 +36,38 @@ export default function Stat({ label, value, change, trend = 'neutral', icon: Ic
   const colors = colorConfig[color] || colorConfig.primary
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm">
+    <div className="relative min-w-0 overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
       {/* Top gradient line */}
       <div className={clsx('absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r', colors.border)} />
 
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-medium text-slate-500 truncate">{label}</p>
-          <div className="mt-2 flex items-baseline gap-1">
-            {prefix && <span className="text-sm text-slate-500">{prefix}</span>}
-            <p className={clsx('font-bold text-slate-900 truncate', compact ? 'text-xl' : 'text-2xl')}>{value}</p>
-            {suffix && <span className="text-sm text-slate-500">{suffix}</span>}
+      <div className="flex items-start gap-3">
+        {Icon && (
+          <div className={clsx('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', colors.iconBg)}>
+            <Icon className={clsx('h-4 w-4', colors.iconText)} />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] font-medium text-slate-500">{label}</p>
+          <div className="mt-1 flex items-baseline gap-1">
+            {prefix && <span className="text-xs text-slate-500">{prefix}</span>}
+            <p className={clsx('font-bold text-slate-900', compact ? 'text-lg' : 'text-xl')}>{value}</p>
+            {suffix && <span className="text-xs text-slate-500">{suffix}</span>}
           </div>
           {change !== undefined && (
-            <div className="mt-2 flex items-center gap-1.5">
+            <div className="mt-1.5 flex items-center gap-1">
               <span
                 className={clsx(
-                  'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium',
+                  'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
                   trendInfo.bg,
                   trendInfo.color
                 )}
               >
-                <TrendIcon className="h-3 w-3" />
+                <TrendIcon className="h-2.5 w-2.5" />
                 {Math.abs(change)}%
               </span>
-              <span className="text-[11px] text-slate-400">vs mois prec.</span>
             </div>
           )}
         </div>
-        {Icon && (
-          <div className={clsx('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', colors.iconBg)}>
-            <Icon className={clsx('h-5 w-5', colors.iconText)} />
-          </div>
-        )}
       </div>
     </div>
   )
