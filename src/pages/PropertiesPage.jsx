@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 import {
   HiOutlinePlus,
   HiOutlineHomeModern,
@@ -9,6 +10,8 @@ import {
   HiOutlineBuildingStorefront,
   HiOutlinePencilSquare,
   HiOutlineTrash,
+  HiOutlineMapPin,
+  HiOutlineSquare3Stack3D,
 } from 'react-icons/hi2'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
@@ -31,7 +34,13 @@ const propertyTypeIcons = {
   maison: HiOutlineHome,
   local_commercial: HiOutlineBuildingStorefront,
   parking: HiOutlineHomeModern,
-  cave: HiOutlineHomeModern,
+  cave: HiOutlineSquare3Stack3D,
+}
+
+const statusColors = {
+  occupied: 'success',
+  vacant: 'warning',
+  renovation: 'info',
 }
 
 const propertyTypeOptions = Object.entries(PROPERTY_TYPES).map(([value, { label }]) => ({ value, label }))
@@ -122,7 +131,10 @@ export default function PropertiesPage() {
   }
 
   const handleSave = () => {
-    if (!form.name.trim()) return
+    if (!form.name.trim()) {
+      toast.error('Le nom du bien est requis')
+      return
+    }
     const data = {
       ...form,
       address: form.address_line1 || '',
@@ -132,8 +144,10 @@ export default function PropertiesPage() {
     }
     if (editingId) {
       updateProperty(editingId, data)
+      toast.success('Bien mis a jour')
     } else {
       createProperty(data)
+      toast.success('Bien cree avec succes')
     }
     setShowModal(false)
     setEditingId(null)
@@ -143,6 +157,7 @@ export default function PropertiesPage() {
     if (deleteTarget) {
       deleteProperty(deleteTarget)
       setDeleteTarget(null)
+      toast.success('Bien supprime')
     }
   }
 
@@ -150,10 +165,10 @@ export default function PropertiesPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-5"
     >
       <PageHeader
         title="Biens Immobiliers"
@@ -165,36 +180,36 @@ export default function PropertiesPage() {
         }
       />
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="w-64">
-          <SearchInput value={search} onChange={setSearch} placeholder="Rechercher un bien..." />
+      {/* Filters - responsive */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <SearchInput value={search} onChange={setSearch} placeholder="Rechercher un bien..." className="w-full sm:w-64" />
+        <div className="flex flex-wrap gap-2">
+          <SelectField
+            options={[{ value: '', label: 'Tous les types' }, ...propertyTypeOptions]}
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full sm:w-40"
+          />
+          <SelectField
+            options={[{ value: '', label: 'Tous les statuts' }, ...statusOptions]}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full sm:w-40"
+          />
+          <SelectField
+            options={[{ value: '', label: 'Toutes structures' }, ...structureOptions]}
+            value={structureFilter}
+            onChange={(e) => setStructureFilter(e.target.value)}
+            className="w-full sm:w-44"
+          />
         </div>
-        <SelectField
-          options={[{ value: '', label: 'Tous les types' }, ...propertyTypeOptions]}
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="w-44"
-        />
-        <SelectField
-          options={[{ value: '', label: 'Tous les statuts' }, ...statusOptions]}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-44"
-        />
-        <SelectField
-          options={[{ value: '', label: 'Toutes structures' }, ...structureOptions]}
-          value={structureFilter}
-          onChange={(e) => setStructureFilter(e.target.value)}
-          className="w-48"
-        />
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={HiOutlineHomeModern}
           title="Aucun bien trouve"
-          description="Aucun bien ne correspond a vos criteres de recherche."
+          description="Aucun bien ne correspond a vos criteres. Ajoutez votre premier bien immobilier."
           action={
             <Button icon={HiOutlinePlus} onClick={openCreate}>
               Nouveau bien
@@ -202,59 +217,97 @@ export default function PropertiesPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((property) => {
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((property, idx) => {
             const statusInfo = PROPERTY_STATUSES[property.status] || PROPERTY_STATUSES.vacant
             const TypeIcon = propertyTypeIcons[property.type] || HiOutlineHomeModern
             const activeRent = getActiveRent(property.id)
+            const badgeVariant = statusColors[property.status] || 'neutral'
 
             return (
-              <Card key={property.id} hover className="cursor-pointer">
-                <div onClick={() => navigate(`/properties/${property.id}`)}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-                        <TypeIcon className="h-5 w-5 text-slate-600" />
+              <motion.div
+                key={property.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: idx * 0.03 }}
+              >
+                <Card hover className="h-full flex flex-col">
+                  <div className="flex-1" onClick={() => navigate(`/properties/${property.id}`)}>
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                          <TypeIcon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-slate-900 truncate">{property.name}</h3>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <HiOutlineMapPin className="h-3 w-3 text-slate-400 shrink-0" />
+                            <p className="text-xs text-slate-500 truncate">{property.address || property.address_line1 || '-'}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">{property.name}</h3>
-                        <p className="text-sm text-slate-500">{property.address || property.address_line1 || '-'}</p>
+                      <Badge variant={badgeVariant} dot size="sm">{statusInfo.label}</Badge>
+                    </div>
+
+                    {/* Details */}
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                      <div className="flex gap-4 text-xs text-slate-500">
+                        {(property.surface || property.surface_m2) > 0 && (
+                          <span className="flex items-center gap-1">
+                            {formatSurface(property.surface || property.surface_m2)}
+                          </span>
+                        )}
+                        {(property.rooms || property.nb_rooms) > 0 && (
+                          <span>{property.rooms || property.nb_rooms} pieces</span>
+                        )}
+                        {property.floor != null && property.floor !== '' && (
+                          <span>Etage {property.floor}</span>
+                        )}
                       </div>
+                      <span className="text-sm font-bold text-slate-900">
+                        {activeRent ? formatCurrency(activeRent) : property.monthly_rent ? formatCurrency(property.monthly_rent) : '-'}
+                        {(activeRent || property.monthly_rent) && <span className="text-xs font-normal text-slate-400">/mois</span>}
+                      </span>
                     </div>
-                    <Badge variant={statusInfo.color}>{statusInfo.label}</Badge>
                   </div>
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
-                    <div className="flex gap-3 text-slate-500">
-                      {property.surface && <span>{formatSurface(property.surface)}</span>}
-                      {(property.rooms || property.nb_rooms) && <span>{property.rooms || property.nb_rooms}p</span>}
-                    </div>
-                    <span className="font-semibold text-slate-900">
-                      {activeRent ? formatCurrency(activeRent) : formatCurrency(property.monthly_rent)}/mois
-                    </span>
+
+                  {/* Actions */}
+                  <div className="mt-3 flex justify-end gap-1.5 border-t border-slate-100 pt-3">
+                    <Button variant="ghost" size="xs" icon={HiOutlinePencilSquare} onClick={(e) => { e.stopPropagation(); openEdit(property) }}>
+                      Modifier
+                    </Button>
+                    <Button variant="ghost" size="xs" icon={HiOutlineTrash} onClick={(e) => { e.stopPropagation(); setDeleteTarget(property.id) }} className="text-red-500 hover:bg-red-50 hover:text-red-600">
+                      Supprimer
+                    </Button>
                   </div>
-                </div>
-                <div className="mt-3 flex justify-end gap-2">
-                  <Button variant="ghost" size="sm" icon={HiOutlinePencilSquare} onClick={(e) => { e.stopPropagation(); openEdit(property) }}>
-                    Modifier
-                  </Button>
-                  <Button variant="ghost" size="sm" icon={HiOutlineTrash} onClick={(e) => { e.stopPropagation(); setDeleteTarget(property.id) }} className="text-red-600 hover:bg-red-50">
-                    Supprimer
-                  </Button>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             )
           })}
         </div>
       )}
 
       {/* Create/Edit Modal */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingId ? 'Modifier le bien' : 'Nouveau bien'} size="lg">
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingId ? 'Modifier le bien' : 'Nouveau bien'}
+        subtitle={editingId ? 'Modifiez les informations du bien' : 'Remplissez les informations du nouveau bien'}
+        size="lg"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
+            <Button onClick={handleSave}>{editingId ? 'Enregistrer' : 'Creer le bien'}</Button>
+          </div>
+        }
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField label="Structure" required options={structureOptions} value={form.structure_id} onChange={(e) => updateField('structure_id', e.target.value)} placeholder="Selectionnez une structure" />
-          <SelectField label="Type" required options={propertyTypeOptions} value={form.type} onChange={(e) => updateField('type', e.target.value)} />
-          <InputField label="Nom" required value={form.name} onChange={(e) => updateField('name', e.target.value)} placeholder="Ex: Appartement Nice Centre" />
+          <SelectField label="Type de bien" required options={propertyTypeOptions} value={form.type} onChange={(e) => updateField('type', e.target.value)} />
+          <InputField label="Nom du bien" required value={form.name} onChange={(e) => updateField('name', e.target.value)} placeholder="Ex: Appartement Nice Centre" className="sm:col-span-2" />
           <InputField label="Adresse" value={form.address_line1} onChange={(e) => updateField('address_line1', e.target.value)} placeholder="Numero et rue" />
-          <InputField label="Complement" value={form.address_line2} onChange={(e) => updateField('address_line2', e.target.value)} />
+          <InputField label="Complement" value={form.address_line2} onChange={(e) => updateField('address_line2', e.target.value)} placeholder="Batiment, etage..." />
           <InputField label="Code postal" value={form.postal_code} onChange={(e) => updateField('postal_code', e.target.value)} placeholder="06000" />
           <InputField label="Ville" value={form.city} onChange={(e) => updateField('city', e.target.value)} placeholder="Nice" />
           <InputField label="Surface (m²)" type="number" value={form.surface_m2} onChange={(e) => updateField('surface_m2', e.target.value)} />
@@ -263,13 +316,15 @@ export default function PropertiesPage() {
           <InputField label="Batiment" value={form.building} onChange={(e) => updateField('building', e.target.value)} />
           <InputField label="N° de lot" value={form.lot_number} onChange={(e) => updateField('lot_number', e.target.value)} />
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-slate-700">Notes</label>
-            <textarea value={form.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none" />
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => updateField('notes', e.target.value)}
+              rows={3}
+              className="block w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 transition-all focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:outline-none hover:border-slate-300 resize-none"
+              placeholder="Informations complementaires..."
+            />
           </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-          <Button onClick={handleSave}>{editingId ? 'Enregistrer' : 'Creer'}</Button>
         </div>
       </Modal>
 

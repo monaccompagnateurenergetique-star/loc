@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 import {
   HiOutlineDocumentCurrencyEuro,
   HiOutlinePlus,
   HiOutlineArrowDownTray,
   HiOutlineBanknotes,
+  HiOutlineEye,
 } from 'react-icons/hi2'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
@@ -72,6 +74,9 @@ export default function InvoicesPage() {
   const [paymentInvoice, setPaymentInvoice] = useState(null)
   const [paymentForm, setPaymentForm] = useState({ amount: '', date: '', method: 'virement', reference: '', notes: '' })
 
+  const [showPdfPreview, setShowPdfPreview] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState(null)
+
   const structureOptions = useMemo(
     () => [{ value: '', label: 'Toutes structures' }, ...structures.map((s) => ({ value: s.id, label: s.name }))],
     [structures]
@@ -91,13 +96,13 @@ export default function InvoicesPage() {
   }, [invoices, filterYear, filterMonth, filterStatus, filterStructure])
 
   const columns = [
-    { key: 'id', label: 'N° Facture', render: (v) => <span className="font-mono text-xs">{v}</span> },
+    { key: 'id', label: 'N°', render: (v) => <span className="font-mono text-xs text-slate-500">{v?.slice(-8)}</span> },
     {
       key: 'tenant_id',
       label: 'Locataire',
       render: (_, row) => {
         const t = tenants.find((t) => t.id === row.tenant_id)
-        return t ? <span className="font-medium">{t.first_name} {t.last_name}</span> : '-'
+        return t ? <span className="font-medium text-slate-900">{t.first_name} {t.last_name}</span> : '-'
       },
     },
     {
@@ -105,12 +110,12 @@ export default function InvoicesPage() {
       label: 'Bien',
       render: (_, row) => {
         const p = properties.find((p) => p.id === row.property_id)
-        return p?.name || '-'
+        return <span className="text-slate-600">{p?.name || '-'}</span>
       },
     },
-    { key: 'period_label', label: 'Periode' },
-    { key: 'total_ttc', label: 'Montant TTC', sortable: true, render: (v) => formatCurrency(v) },
-    { key: 'paid_amount', label: 'Paye', render: (v) => formatCurrency(v) },
+    { key: 'period_label', label: 'Periode', render: (v) => <span className="text-slate-600">{v}</span> },
+    { key: 'total_ttc', label: 'Montant', sortable: true, render: (v) => <span className="font-semibold">{formatCurrency(v)}</span> },
+    { key: 'paid_amount', label: 'Paye', render: (v) => <span className="text-slate-500">{formatCurrency(v)}</span> },
     {
       key: 'status',
       label: 'Statut',
@@ -118,48 +123,90 @@ export default function InvoicesPage() {
         const info = INVOICE_STATUSES[v]
         if (!info) return v
         const variant = v === 'paid' ? 'success' : v === 'pending' ? 'warning' : v === 'partially_paid' ? 'info' : 'danger'
-        return <Badge variant={variant}>{info.label}</Badge>
+        return <Badge variant={variant} dot>{info.label}</Badge>
       },
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: '',
       render: (_, row) => (
         <div className="flex gap-1">
           <Button
             variant="ghost"
-            size="sm"
+            size="xs"
+            icon={HiOutlineEye}
+            onClick={(e) => { e.stopPropagation(); handlePreviewPDF(row) }}
+            title="Voir le PDF"
+          />
+          <Button
+            variant="ghost"
+            size="xs"
             icon={HiOutlineArrowDownTray}
             onClick={(e) => { e.stopPropagation(); handleDownloadPDF(row) }}
-          >
-            PDF
-          </Button>
+            title="Telecharger le PDF"
+          />
           {row.status !== 'paid' && (
             <Button
               variant="ghost"
-              size="sm"
+              size="xs"
               icon={HiOutlineBanknotes}
               onClick={(e) => { e.stopPropagation(); openPayment(row) }}
-            >
-              Payer
-            </Button>
+              className="text-emerald-600 hover:bg-emerald-50"
+              title="Enregistrer un paiement"
+            />
           )}
         </div>
       ),
     },
   ]
 
-  const handleDownloadPDF = (invoice) => {
+  const getInvoiceData = (invoice) => {
     const tenant = tenants.find((t) => t.id === invoice.tenant_id)
     const property = properties.find((p) => p.id === invoice.property_id)
     const structure = structures.find((s) => s.id === invoice.structure_id)
     const lease = leases.find((l) => l.id === invoice.lease_id)
-    generateQuittancePDF({ invoice, tenant, property, structure, lease })
+    return { invoice, tenant, property, structure, lease }
+  }
+
+  const handleDownloadPDF = (invoice) => {
+    try {
+      generateQuittancePDF(getInvoiceData(invoice))
+      toast.success('PDF telecharge')
+    } catch (err) {
+      toast.error('Erreur lors de la generation du PDF')
+      console.error(err)
+    }
+  }
+
+  const handlePreviewPDF = (invoice) => {
+    try {
+      const { default: jsPDF } = { default: null }
+      const data = getInvoiceData(invoice)
+      // Generate PDF as blob for preview
+      const { generateQuittancePDFBlob } = require('../lib/generateQuittancePDF')
+      if (typeof generateQuittancePDFBlob === 'function') {
+        const blob = generateQuittancePDFBlob(data)
+        const url = URL.createObjectURL(blob)
+        setPdfUrl(url)
+        setShowPdfPreview(true)
+      } else {
+        // fallback: just download
+        handleDownloadPDF(invoice)
+      }
+    } catch {
+      // fallback: just download
+      handleDownloadPDF(invoice)
+    }
   }
 
   const handleGenerate = () => {
     const result = generateMonthlyInvoices(Number(genYear), Number(genMonth))
     setGenerateResult(result)
+    if (result && result.length > 0) {
+      toast.success(`${result.length} quittance(s) generee(s)`)
+    } else {
+      toast('Toutes les quittances existent deja', { icon: 'ℹ️' })
+    }
   }
 
   const openPayment = (invoice) => {
@@ -188,14 +235,15 @@ export default function InvoicesPage() {
     })
     setShowPayment(false)
     setPaymentInvoice(null)
+    toast.success('Paiement enregistre')
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-5"
     >
       <PageHeader
         title="Facturation"
@@ -207,31 +255,31 @@ export default function InvoicesPage() {
         }
       />
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Filters - responsive */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <SelectField
           options={yearOptions}
           value={filterYear}
           onChange={(e) => setFilterYear(e.target.value)}
-          className="w-32"
+          className="w-full sm:w-32"
         />
         <SelectField
           options={monthOptions}
           value={filterMonth}
           onChange={(e) => setFilterMonth(e.target.value)}
-          className="w-40"
+          className="w-full sm:w-40"
         />
         <SelectField
           options={statusOptions}
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="w-48"
+          className="w-full sm:w-44"
         />
         <SelectField
           options={structureOptions}
           value={filterStructure}
           onChange={(e) => setFilterStructure(e.target.value)}
-          className="w-48"
+          className="w-full sm:w-44"
         />
       </div>
 
@@ -239,7 +287,7 @@ export default function InvoicesPage() {
         <EmptyState
           icon={HiOutlineDocumentCurrencyEuro}
           title="Aucune facture"
-          description="Aucune facture ne correspond a vos filtres. Generez les quittances pour le mois en cours."
+          description="Generez les quittances pour le mois en cours."
           action={
             <Button icon={HiOutlinePlus} onClick={() => setShowGenerate(true)}>
               Generer quittances
@@ -255,12 +303,21 @@ export default function InvoicesPage() {
       )}
 
       {/* Generate Modal */}
-      <Modal isOpen={showGenerate} onClose={() => setShowGenerate(false)} title="Generer les quittances mensuelles" size="md">
+      <Modal
+        isOpen={showGenerate}
+        onClose={() => setShowGenerate(false)}
+        title="Generer les quittances"
+        subtitle="Generation automatique pour tous les baux actifs"
+        size="md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowGenerate(false)}>Fermer</Button>
+            {!generateResult && <Button onClick={handleGenerate}>Generer</Button>}
+          </div>
+        }
+      >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
-            Selectionnez le mois et l'annee pour generer automatiquement les quittances pour tous les baux actifs.
-          </p>
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <SelectField
               label="Annee"
               options={yearOptions}
@@ -278,10 +335,10 @@ export default function InvoicesPage() {
           </div>
 
           {generateResult && (
-            <div className="rounded-lg bg-slate-50 p-4">
+            <div className="rounded-xl bg-slate-50 p-4">
               {generateResult.length > 0 ? (
                 <>
-                  <p className="text-sm font-medium text-emerald-700">{generateResult.length} quittance(s) generee(s) avec succes !</p>
+                  <p className="text-sm font-medium text-emerald-700">{generateResult.length} quittance(s) generee(s)</p>
                   <ul className="mt-2 space-y-1">
                     {generateResult.map((inv) => {
                       const t = tenants.find((t) => t.id === inv.tenant_id)
@@ -299,26 +356,37 @@ export default function InvoicesPage() {
             </div>
           )}
         </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setShowGenerate(false)}>Fermer</Button>
-          {!generateResult && <Button onClick={handleGenerate}>Generer</Button>}
-        </div>
       </Modal>
 
       {/* Payment Modal */}
-      <Modal isOpen={showPayment} onClose={() => setShowPayment(false)} title="Enregistrer un paiement" size="md">
+      <Modal
+        isOpen={showPayment}
+        onClose={() => setShowPayment(false)}
+        title="Enregistrer un paiement"
+        size="md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowPayment(false)}>Annuler</Button>
+            <Button variant="success" onClick={handlePayment}>Enregistrer</Button>
+          </div>
+        }
+      >
         {paymentInvoice && (
           <div className="space-y-4">
-            <div className="rounded-lg bg-slate-50 p-3">
-              <p className="text-sm text-slate-600">
-                Facture: <span className="font-mono font-medium">{paymentInvoice.id}</span> - {paymentInvoice.period_label}
-              </p>
-              <p className="text-sm text-slate-600">
-                Montant TTC: {formatCurrency(paymentInvoice.total_ttc)} | Reste du: {formatCurrency(paymentInvoice.remaining)}
-              </p>
+            <div className="rounded-xl bg-slate-50 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-500">Facture</p>
+                  <p className="text-sm font-medium text-slate-900">{paymentInvoice.period_label}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-slate-500">Reste du</p>
+                  <p className="text-sm font-bold text-slate-900">{formatCurrency(paymentInvoice.remaining)}</p>
+                </div>
+              </div>
             </div>
             <InputField
-              label="Montant"
+              label="Montant du paiement"
               type="number"
               required
               value={paymentForm.amount}
@@ -342,21 +410,8 @@ export default function InvoicesPage() {
               onChange={(e) => setPaymentForm((prev) => ({ ...prev, reference: e.target.value }))}
               placeholder="Ex: VIR-2026-03"
             />
-            <div>
-              <label className="block text-sm font-medium text-slate-700">Notes</label>
-              <textarea
-                value={paymentForm.notes}
-                onChange={(e) => setPaymentForm((prev) => ({ ...prev, notes: e.target.value }))}
-                rows={2}
-                className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none"
-              />
-            </div>
           </div>
         )}
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setShowPayment(false)}>Annuler</Button>
-          <Button onClick={handlePayment}>Enregistrer le paiement</Button>
-        </div>
       </Modal>
     </motion.div>
   )

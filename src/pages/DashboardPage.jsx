@@ -12,6 +12,7 @@ import {
   HiOutlineExclamationCircle,
   HiOutlineCalendarDays,
   HiOutlineCheckCircle,
+  HiOutlineArrowRight,
 } from 'react-icons/hi2'
 import {
   BarChart,
@@ -36,7 +37,7 @@ import { useTenantStore } from '../store/tenantStore'
 import { useLeaseStore } from '../store/leaseStore'
 import { formatCurrency, formatDate } from '../lib/formatters'
 
-const PIE_COLORS = ['#22c55e', '#eab308', '#ef4444']
+const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444']
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -86,112 +87,120 @@ export default function DashboardPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-8"
+      className="space-y-6"
     >
       <PageHeader
         title="Tableau de bord"
-        subtitle="Bienvenue ! Voici un apercu de votre patrimoine immobilier."
+        subtitle="Vue d'ensemble de votre patrimoine immobilier"
       />
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Stat cards - responsive grid */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <Stat
           label="Revenus du mois"
           value={formatCurrency(stats.totalRevenue || 0)}
           icon={HiOutlineBanknotes}
           trend="up"
           color="primary"
+          compact
         />
         <Stat
-          label="Encaissements du mois"
+          label="Encaissements"
           value={formatCurrency(stats.totalCollected || 0)}
           icon={HiOutlineArrowTrendingUp}
           trend="up"
           color="success"
+          compact
         />
         <Stat
-          label="Impayes en cours"
+          label="Impayes"
           value={formatCurrency(stats.totalOutstanding || 0)}
           icon={HiOutlineExclamationTriangle}
           trend={stats.totalOutstanding > 0 ? 'down' : 'neutral'}
           color="danger"
+          compact
         />
         <Stat
-          label="Taux d'occupation"
-          value={`${stats.occupancyRate || 0} %`}
+          label="Occupation"
+          value={`${stats.occupancyRate || 0}%`}
           icon={HiOutlineChartPie}
-          trend="up"
           color="primary"
+          compact
         />
         <Stat
           label="Baux actifs"
           value={stats.activeLeasesCount || 0}
           icon={HiOutlineDocumentText}
           color="warning"
+          compact
         />
         <Stat
           label="Biens geres"
           value={properties.length}
           icon={HiOutlineHomeModern}
           color="success"
+          compact
         />
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Revenue Bar Chart */}
-        <Card>
-          <div className="mb-5 flex items-center gap-2">
-            <HiOutlineChartBarSquare className="h-5 w-5 text-primary-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Revenus par mois</h3>
-            <span className="text-xs text-slate-400">(12 derniers mois)</span>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        {/* Revenue Bar Chart - takes more space */}
+        <Card className="lg:col-span-3">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HiOutlineChartBarSquare className="h-5 w-5 text-primary-500" />
+              <h3 className="text-sm font-semibold text-slate-900">Revenus mensuels</h3>
+            </div>
+            <span className="text-xs text-slate-400">12 derniers mois</span>
           </div>
-          <div className="h-72">
+          <div className="h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.revenueByMonth || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v} \u20AC`} axisLine={false} tickLine={false} />
+              <BarChart data={stats.revenueByMonth || []} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v) => `${v}\u20AC`} axisLine={false} tickLine={false} width={60} />
                 <Tooltip
                   formatter={(value) => formatCurrency(value)}
-                  contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}
+                  contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgb(0 0 0 / 0.1)', fontSize: 13 }}
                 />
-                <Legend />
-                <Bar dataKey="expected" name="Facture" fill="#4f46e5" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="collected" name="Encaisse" fill="#c7d2fe" radius={[6, 6, 0, 0]} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="expected" name="Facture" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="collected" name="Encaisse" fill="#a5b4fc" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
         {/* Occupancy Pie Chart */}
-        <Card>
-          <div className="mb-5 flex items-center gap-2">
+        <Card className="lg:col-span-2">
+          <div className="mb-4 flex items-center gap-2">
             <HiOutlineChartPie className="h-5 w-5 text-primary-500" />
             <h3 className="text-sm font-semibold text-slate-900">Taux d'occupation</h3>
           </div>
-          <div className="h-72">
+          <div className="h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={occupancyPieData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={3}
+                  innerRadius={55}
+                  outerRadius={90}
+                  paddingAngle={4}
                   dataKey="value"
                   label={({ name, value }) => `${name}: ${value}`}
+                  labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
                 >
                   {occupancyPieData.map((entry, index) => (
                     <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgb(0 0 0 / 0.1)' }} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -199,91 +208,93 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Overdue invoices */}
         <Card>
-          <div className="mb-5 flex items-center gap-2">
-            <HiOutlineExclamationCircle className="h-5 w-5 text-red-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Factures en retard</h3>
-            {overdueWithDetails.length > 0 && (
-              <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-100 px-1.5 text-[11px] font-bold text-red-600">
-                {overdueWithDetails.length}
-              </span>
-            )}
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HiOutlineExclamationCircle className="h-5 w-5 text-red-500" />
+              <h3 className="text-sm font-semibold text-slate-900">Factures en retard</h3>
+              {overdueWithDetails.length > 0 && (
+                <Badge variant="danger" size="sm">{overdueWithDetails.length}</Badge>
+              )}
+            </div>
+            <button
+              onClick={() => navigate('/invoices')}
+              className="text-xs text-slate-400 hover:text-primary-600 transition-colors flex items-center gap-1"
+            >
+              Voir tout <HiOutlineArrowRight className="h-3 w-3" />
+            </button>
           </div>
           {overdueWithDetails.length === 0 ? (
-            <div className="flex flex-col items-center py-10">
-              <HiOutlineCheckCircle className="mb-3 h-10 w-10 text-emerald-300" />
-              <p className="text-sm font-medium text-slate-400">Aucun impaye en cours</p>
-              <p className="mt-1 text-xs text-slate-300">Tous les paiements sont a jour</p>
+            <div className="flex flex-col items-center py-8">
+              <HiOutlineCheckCircle className="mb-2 h-10 w-10 text-emerald-300" />
+              <p className="text-sm font-medium text-slate-400">Aucun impaye</p>
+              <p className="mt-0.5 text-xs text-slate-300">Tous les paiements sont a jour</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-100 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    <th className="pb-3 pr-4">Locataire</th>
-                    <th className="pb-3 pr-4">Bien</th>
-                    <th className="pb-3 pr-4">Montant</th>
-                    <th className="pb-3">Retard</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {overdueWithDetails.map((inv, idx) => (
-                    <tr
-                      key={inv.id}
-                      className={`cursor-pointer text-sm transition-colors hover:bg-slate-50 ${
-                        idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-                      }`}
-                      onClick={() => navigate(`/invoices`)}
-                    >
-                      <td className="rounded-l-lg py-3 pr-4 font-medium text-slate-900">
-                        {inv.tenant ? `${inv.tenant.first_name} ${inv.tenant.last_name}` : '-'}
-                      </td>
-                      <td className="py-3 pr-4 text-slate-600">{inv.property?.name || '-'}</td>
-                      <td className="py-3 pr-4 font-semibold text-red-600">{formatCurrency(inv.remaining)}</td>
-                      <td className="rounded-r-lg py-3">
-                        <Badge variant="danger">{inv.daysOverdue}j</Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-2">
+              {overdueWithDetails.slice(0, 5).map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 cursor-pointer hover:bg-slate-100 transition-colors"
+                  onClick={() => navigate('/invoices')}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-900 truncate">
+                      {inv.tenant ? `${inv.tenant.first_name} ${inv.tenant.last_name}` : '-'}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">{inv.property?.name || '-'}</p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0 ml-3">
+                    <span className="text-sm font-semibold text-red-600">{formatCurrency(inv.remaining)}</span>
+                    <Badge variant="danger" size="sm">{inv.daysOverdue}j</Badge>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </Card>
 
         {/* Expiring leases */}
         <Card>
-          <div className="mb-5 flex items-center gap-2">
-            <HiOutlineCalendarDays className="h-5 w-5 text-amber-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Baux arrivant a echeance</h3>
-            <span className="text-xs text-slate-400">(90 jours)</span>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HiOutlineCalendarDays className="h-5 w-5 text-amber-500" />
+              <h3 className="text-sm font-semibold text-slate-900">Baux a echeance</h3>
+              <span className="text-xs text-slate-400">(90j)</span>
+            </div>
+            <button
+              onClick={() => navigate('/leases')}
+              className="text-xs text-slate-400 hover:text-primary-600 transition-colors flex items-center gap-1"
+            >
+              Voir tout <HiOutlineArrowRight className="h-3 w-3" />
+            </button>
           </div>
           {expiringWithDetails.length === 0 ? (
-            <div className="flex flex-col items-center py-10">
-              <HiOutlineCheckCircle className="mb-3 h-10 w-10 text-emerald-300" />
-              <p className="text-sm font-medium text-slate-400">Aucun bail arrivant a echeance</p>
-              <p className="mt-1 text-xs text-slate-300">Pas d'action requise prochainement</p>
+            <div className="flex flex-col items-center py-8">
+              <HiOutlineCheckCircle className="mb-2 h-10 w-10 text-emerald-300" />
+              <p className="text-sm font-medium text-slate-400">Aucun bail a echeance</p>
+              <p className="mt-0.5 text-xs text-slate-300">Pas d'action requise</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {expiringWithDetails.map((lease) => (
+            <div className="space-y-2">
+              {expiringWithDetails.slice(0, 5).map((lease) => (
                 <div
                   key={lease.id}
-                  className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-100 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                  className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 cursor-pointer hover:bg-slate-100 transition-colors"
                   onClick={() => navigate(`/leases/${lease.id}`)}
                 >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-900 truncate">
                       {lease.tenant ? `${lease.tenant.first_name} ${lease.tenant.last_name}` : '-'}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-500">{lease.property?.name || '-'}</p>
+                    <p className="text-xs text-slate-500 truncate">{lease.property?.name || '-'}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-slate-600">{formatDate(lease.end_date)}</p>
-                    <Badge variant={lease.daysRemaining < 30 ? 'danger' : 'warning'}>
-                      {lease.daysRemaining}j restants
+                  <div className="flex items-center gap-2 shrink-0 ml-3">
+                    <span className="text-xs text-slate-500">{formatDate(lease.end_date)}</span>
+                    <Badge variant={lease.daysRemaining < 30 ? 'danger' : 'warning'} size="sm">
+                      {lease.daysRemaining}j
                     </Badge>
                   </div>
                 </div>

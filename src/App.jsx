@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Sidebar from './components/layout/Sidebar'
+import MobileNav from './components/layout/MobileNav'
 import { useAuthStore } from './store/authStore'
 import { useStructureStore } from './store/structureStore'
 import { usePropertyStore } from './store/propertyStore'
@@ -68,7 +69,8 @@ export default function App() {
   const sidebarWidth = isDesktop ? (sidebarCollapsed ? 72 : 260) : 0
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50">
+      {/* Desktop sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapse={handleToggleCollapse}
@@ -76,11 +78,18 @@ export default function App() {
         onLogout={logout}
       />
 
+      {/* Main content */}
       <div
         className="min-h-screen content-transition"
         style={{ paddingLeft: sidebarWidth }}
       >
-        <main style={{ padding: '32px', maxWidth: '1600px' }}>
+        <main
+          className="mx-auto pb-24 lg:pb-8"
+          style={{
+            padding: isDesktop ? '28px 32px' : '16px 16px 100px 16px',
+            maxWidth: '1600px',
+          }}
+        >
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/structures" element={<StructuresPage />} />
@@ -98,6 +107,9 @@ export default function App() {
           </Routes>
         </main>
       </div>
+
+      {/* Mobile bottom navigation */}
+      {!isDesktop && <MobileNav />}
     </div>
   )
 }
