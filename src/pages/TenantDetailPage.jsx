@@ -17,6 +17,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog'
 import InputField from '../components/ui/InputField'
 import SelectField from '../components/ui/SelectField'
 import Table from '../components/ui/Table'
+import Breadcrumb from '../components/ui/Breadcrumb'
 import { useTenantStore } from '../store/tenantStore'
 import { useLeaseStore } from '../store/leaseStore'
 import { usePropertyStore } from '../store/propertyStore'
@@ -133,9 +134,10 @@ export default function TenantDetailPage() {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <Button variant="ghost" size="sm" icon={HiOutlineArrowLeft} onClick={() => navigate('/tenants')}>
-        Retour
-      </Button>
+      <Breadcrumb items={[
+        { label: 'Locataires', to: '/tenants' },
+        { label: `${tenant.first_name} ${tenant.last_name}` },
+      ]} />
 
       <PageHeader
         title={`${tenant.first_name} ${tenant.last_name}`}

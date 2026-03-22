@@ -19,6 +19,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog'
 import InputField from '../components/ui/InputField'
 import SelectField from '../components/ui/SelectField'
 import EmptyState from '../components/ui/EmptyState'
+import Breadcrumb from '../components/ui/Breadcrumb'
 import { useStructureStore } from '../store/structureStore'
 import { usePropertyStore } from '../store/propertyStore'
 import { useLeaseStore } from '../store/leaseStore'
@@ -107,11 +108,10 @@ export default function StructureDetailPage() {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" icon={HiOutlineArrowLeft} onClick={() => navigate('/structures')}>
-          Retour
-        </Button>
-      </div>
+      <Breadcrumb items={[
+        { label: 'Structures', to: '/structures' },
+        { label: structure.name },
+      ]} />
 
       <PageHeader
         title={structure.name}

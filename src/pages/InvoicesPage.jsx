@@ -16,6 +16,7 @@ import Table from '../components/ui/Table'
 import SelectField from '../components/ui/SelectField'
 import InputField from '../components/ui/InputField'
 import EmptyState from '../components/ui/EmptyState'
+import FilterBar from '../components/ui/FilterBar'
 import { useInvoiceStore } from '../store/invoiceStore'
 import { usePaymentStore } from '../store/paymentStore'
 import { useTenantStore } from '../store/tenantStore'
@@ -255,8 +256,7 @@ export default function InvoicesPage() {
         }
       />
 
-      {/* Filters - responsive */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <FilterBar activeCount={[filterMonth, filterStatus, filterStructure].filter(Boolean).length}>
         <SelectField
           options={yearOptions}
           value={filterYear}
@@ -281,7 +281,7 @@ export default function InvoicesPage() {
           onChange={(e) => setFilterStructure(e.target.value)}
           className="w-full sm:w-44"
         />
-      </div>
+      </FilterBar>
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -299,6 +299,42 @@ export default function InvoicesPage() {
           columns={columns}
           data={filtered}
           emptyMessage="Aucune facture trouvee"
+          mobileRender={(row) => {
+            const t = tenants.find((t) => t.id === row.tenant_id)
+            const p = properties.find((p) => p.id === row.property_id)
+            const statusInfo = INVOICE_STATUSES[row.status]
+            const variant = row.status === 'paid' ? 'success' : row.status === 'pending' ? 'warning' : row.status === 'partially_paid' ? 'info' : 'danger'
+            return (
+              <div className="rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-900 truncate">
+                      {t ? `${t.first_name} ${t.last_name}` : '-'}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">{p?.name || '-'}</p>
+                  </div>
+                  <Badge variant={variant} dot>{statusInfo?.label || row.status}</Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">{row.period_label}</span>
+                  <span className="font-bold text-slate-900">{formatCurrency(row.total_ttc)}</span>
+                </div>
+                {row.paid_amount > 0 && (
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>Paye: {formatCurrency(row.paid_amount)}</span>
+                    {row.remaining > 0 && <span className="text-red-600 font-medium">Reste: {formatCurrency(row.remaining)}</span>}
+                  </div>
+                )}
+                <div className="flex gap-2 pt-1">
+                  <Button variant="ghost" size="sm" icon={HiOutlineEye} onClick={() => handlePreviewPDF(row)} className="flex-1">PDF</Button>
+                  <Button variant="ghost" size="sm" icon={HiOutlineArrowDownTray} onClick={() => handleDownloadPDF(row)} className="flex-1">Telecharger</Button>
+                  {row.status !== 'paid' && (
+                    <Button variant="ghost" size="sm" icon={HiOutlineBanknotes} onClick={() => openPayment(row)} className="flex-1 text-emerald-600">Payer</Button>
+                  )}
+                </div>
+              </div>
+            )
+          }}
         />
       )}
 

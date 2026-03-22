@@ -30,13 +30,19 @@ const colorConfig = {
   },
 }
 
-export default function Stat({ label, value, change, trend = 'neutral', icon: Icon, prefix, suffix, color = 'primary', compact = false }) {
+export default function Stat({ label, value, change, trend = 'neutral', icon: Icon, prefix, suffix, color = 'primary', compact = false, onClick }) {
   const trendInfo = trendConfig[trend] || trendConfig.neutral
   const TrendIcon = trendInfo.icon
   const colors = colorConfig[color] || colorConfig.primary
 
   return (
-    <div className="relative min-w-0 overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+    <div
+      className={clsx(
+        'relative min-w-0 overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm transition-all',
+        onClick && 'cursor-pointer hover:shadow-md hover:border-slate-300 active:scale-[0.98]'
+      )}
+      onClick={onClick}
+    >
       {/* Top gradient line */}
       <div className={clsx('absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r', colors.border)} />
 
@@ -50,7 +56,7 @@ export default function Stat({ label, value, change, trend = 'neutral', icon: Ic
           <p className="text-[12px] font-medium text-slate-500">{label}</p>
           <div className="mt-1 flex items-baseline gap-1">
             {prefix && <span className="text-xs text-slate-500">{prefix}</span>}
-            <p className={clsx('font-bold text-slate-900', compact ? 'text-lg' : 'text-xl')}>{value}</p>
+            <p className={clsx('font-bold text-slate-900 truncate', compact ? 'text-lg' : 'text-xl')}>{value}</p>
             {suffix && <span className="text-xs text-slate-500">{suffix}</span>}
           </div>
           {change !== undefined && (

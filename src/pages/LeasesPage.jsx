@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 import { HiOutlinePlus, HiOutlineDocumentText } from 'react-icons/hi2'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
@@ -154,7 +155,10 @@ export default function LeasesPage() {
   }
 
   const handleSave = () => {
-    if (!form.property_id || !form.tenant_id || !form.start_date || !form.monthly_rent) return
+    if (!form.property_id || !form.tenant_id || !form.start_date || !form.monthly_rent) {
+      toast.error('Veuillez remplir tous les champs obligatoires')
+      return
+    }
     const prop = properties.find((p) => p.id === form.property_id)
     const structure_id = prop?.structure_id || ''
     createLease({
@@ -206,11 +210,46 @@ export default function LeasesPage() {
           columns={columns}
           data={filtered}
           onRowClick={(row) => navigate(`/leases/${row.id}`)}
+          mobileRender={(row) => {
+            const t = tenants.find((t) => t.id === row.tenant_id)
+            const p = properties.find((p) => p.id === row.property_id)
+            return (
+              <div
+                className="rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm cursor-pointer active:bg-slate-50"
+                onClick={() => navigate(`/leases/${row.id}`)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-900 truncate">
+                      {t ? `${t.first_name} ${t.last_name}` : '-'}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">{p?.name || '-'}</p>
+                  </div>
+                  <Badge variant={row.is_active ? 'success' : 'neutral'}>{row.is_active ? 'Actif' : 'Termine'}</Badge>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-sm">
+                  <span className="text-slate-500">{formatDate(row.start_date)} - {formatDate(row.end_date)}</span>
+                  <span className="font-bold text-slate-900">{formatCurrency((row.monthly_rent || 0) + (row.charges || 0))}/m</span>
+                </div>
+              </div>
+            )
+          }}
         />
       )}
 
       {/* Create Lease Modal */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Nouveau bail" size="xl">
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Nouveau bail"
+        size="xl"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
+            <Button onClick={handleSave}>Creer le bail</Button>
+          </div>
+        }
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField
             label="Bien (vacant uniquement)"
@@ -309,10 +348,6 @@ export default function LeasesPage() {
               placeholder="Conditions particulieres..."
             />
           </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-          <Button onClick={handleSave}>Creer le bail</Button>
         </div>
       </Modal>
     </motion.div>

@@ -80,7 +80,7 @@ export default function App() {
 
       {/* Main content */}
       <div
-        className="min-h-screen content-transition overflow-hidden"
+        className="min-h-screen content-transition overflow-x-hidden"
         style={{
           marginLeft: sidebarWidth,
           width: `calc(100% - ${sidebarWidth}px)`,

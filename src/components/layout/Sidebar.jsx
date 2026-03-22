@@ -91,12 +91,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, user, onLogout })
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 pt-5">
-          {!collapsed && (
-            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-              Navigation
-            </p>
-          )}
+        <nav className="flex-1 overflow-y-auto px-3 pt-4">
           <div className="space-y-0.5">
             {mainNavItems.map((item) => (
               <NavItem key={item.to} item={item} />

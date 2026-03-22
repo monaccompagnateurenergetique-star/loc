@@ -15,6 +15,7 @@ import Stat from '../components/ui/Stat'
 import Modal from '../components/ui/Modal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import Table from '../components/ui/Table'
+import Breadcrumb from '../components/ui/Breadcrumb'
 import InputField from '../components/ui/InputField'
 import SelectField from '../components/ui/SelectField'
 import { useLeaseStore } from '../store/leaseStore'
@@ -122,9 +123,10 @@ export default function LeaseDetailPage() {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <Button variant="ghost" size="sm" icon={HiOutlineArrowLeft} onClick={() => navigate('/leases')}>
-        Retour
-      </Button>
+      <Breadcrumb items={[
+        { label: 'Baux', to: '/leases' },
+        { label: tenant ? `${tenant.first_name} ${tenant.last_name}` : 'Bail' },
+      ]} />
 
       <PageHeader
         title={`Bail - ${tenant ? `${tenant.first_name} ${tenant.last_name}` : id}`}

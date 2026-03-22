@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 import { HiOutlinePlus, HiOutlineUsers } from 'react-icons/hi2'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
@@ -133,7 +134,10 @@ export default function TenantsPage() {
   }
 
   const handleSave = () => {
-    if (!form.first_name.trim() || !form.last_name.trim()) return
+    if (!form.first_name.trim() || !form.last_name.trim()) {
+      toast.error('Le prenom et le nom sont obligatoires')
+      return
+    }
     const data = {
       ...form,
       monthly_income: form.monthly_income ? Number(form.monthly_income) : null,
@@ -193,11 +197,42 @@ export default function TenantsPage() {
           columns={columns}
           data={filtered}
           onRowClick={(row) => navigate(`/tenants/${row.id}`)}
+          mobileRender={(row) => {
+            const lease = getTenantLease(row.id)
+            const prop = lease ? properties.find((p) => p.id === lease.property_id) : null
+            return (
+              <div
+                className="rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm cursor-pointer active:bg-slate-50"
+                onClick={() => navigate(`/tenants/${row.id}`)}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-slate-900">{row.first_name} {row.last_name}</p>
+                  {lease && <span className="text-sm font-medium text-primary-600">{formatCurrency(lease.monthly_rent + (lease.charges || 0))}</span>}
+                </div>
+                <div className="mt-1.5 flex items-center gap-4 text-xs text-slate-500">
+                  {row.phone && <span>{formatPhoneNumber(row.phone)}</span>}
+                  {row.email && <span className="truncate">{row.email}</span>}
+                </div>
+                {prop && <p className="mt-1.5 text-xs text-slate-400">{prop.name}</p>}
+              </div>
+            )
+          }}
         />
       )}
 
       {/* Create/Edit Modal */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingId ? 'Modifier le locataire' : 'Nouveau locataire'} size="lg">
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingId ? 'Modifier le locataire' : 'Nouveau locataire'}
+        size="lg"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
+            <Button onClick={handleSave}>{editingId ? 'Enregistrer' : 'Creer'}</Button>
+          </div>
+        }
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <InputField label="Prenom" required value={form.first_name} onChange={(e) => updateField('first_name', e.target.value)} placeholder="Sophie" />
           <InputField label="Nom" required value={form.last_name} onChange={(e) => updateField('last_name', e.target.value)} placeholder="Durand" />
@@ -213,12 +248,8 @@ export default function TenantsPage() {
           <InputField label="Revenus mensuels" type="number" value={form.monthly_income} onChange={(e) => updateField('monthly_income', e.target.value)} placeholder="3200" />
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-slate-700">Notes</label>
-            <textarea value={form.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none" placeholder="Notes supplementaires..." />
+            <textarea value={form.notes} onChange={(e) => updateField('notes', e.target.value)} rows={3} className="mt-1 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 transition-colors focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="Notes supplementaires..." />
           </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-          <Button onClick={handleSave}>{editingId ? 'Enregistrer' : 'Creer'}</Button>
         </div>
       </Modal>
 

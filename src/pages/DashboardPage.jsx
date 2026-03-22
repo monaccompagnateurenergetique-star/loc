@@ -13,7 +13,11 @@ import {
   HiOutlineCalendarDays,
   HiOutlineCheckCircle,
   HiOutlineArrowRight,
+  HiOutlinePlusCircle,
+  HiOutlineUserPlus,
+  HiOutlineBuildingOffice2,
 } from 'react-icons/hi2'
+import Button from '../components/ui/Button'
 import {
   BarChart,
   Bar,
@@ -97,6 +101,22 @@ export default function DashboardPage() {
         subtitle="Vue d'ensemble de votre patrimoine immobilier"
       />
 
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <Button variant="secondary" size="sm" icon={HiOutlineBuildingOffice2} onClick={() => navigate('/properties')}>
+          Nouveau bien
+        </Button>
+        <Button variant="secondary" size="sm" icon={HiOutlineUserPlus} onClick={() => navigate('/tenants')}>
+          Nouveau locataire
+        </Button>
+        <Button variant="secondary" size="sm" icon={HiOutlinePlusCircle} onClick={() => navigate('/leases')}>
+          Nouveau bail
+        </Button>
+        <Button variant="secondary" size="sm" icon={HiOutlineDocumentText} onClick={() => navigate('/invoices')}>
+          Generer quittances
+        </Button>
+      </div>
+
       {/* Stat cards - responsive grid */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 min-w-0">
         <Stat
@@ -106,6 +126,7 @@ export default function DashboardPage() {
           trend="up"
           color="primary"
           compact
+          onClick={() => navigate('/invoices')}
         />
         <Stat
           label="Encaissements"
@@ -114,6 +135,7 @@ export default function DashboardPage() {
           trend="up"
           color="success"
           compact
+          onClick={() => navigate('/payments')}
         />
         <Stat
           label="Impayes"
@@ -122,6 +144,7 @@ export default function DashboardPage() {
           trend={stats.totalOutstanding > 0 ? 'down' : 'neutral'}
           color="danger"
           compact
+          onClick={() => navigate('/invoices')}
         />
         <Stat
           label="Occupation"
@@ -129,6 +152,7 @@ export default function DashboardPage() {
           icon={HiOutlineChartPie}
           color="primary"
           compact
+          onClick={() => navigate('/properties')}
         />
         <Stat
           label="Baux actifs"
@@ -136,6 +160,7 @@ export default function DashboardPage() {
           icon={HiOutlineDocumentText}
           color="warning"
           compact
+          onClick={() => navigate('/leases')}
         />
         <Stat
           label="Biens geres"
@@ -143,71 +168,11 @@ export default function DashboardPage() {
           icon={HiOutlineHomeModern}
           color="success"
           compact
+          onClick={() => navigate('/properties')}
         />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        {/* Revenue Bar Chart - takes more space */}
-        <Card className="lg:col-span-3">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <HiOutlineChartBarSquare className="h-5 w-5 text-primary-500" />
-              <h3 className="text-sm font-semibold text-slate-900">Revenus mensuels</h3>
-            </div>
-            <span className="text-xs text-slate-400">12 derniers mois</span>
-          </div>
-          <div className="h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.revenueByMonth || []} barGap={2}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v) => `${v}\u20AC`} axisLine={false} tickLine={false} width={60} />
-                <Tooltip
-                  formatter={(value) => formatCurrency(value)}
-                  contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgb(0 0 0 / 0.1)', fontSize: 13 }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="expected" name="Facture" fill="#4f46e5" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="collected" name="Encaisse" fill="#a5b4fc" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Occupancy Pie Chart */}
-        <Card className="lg:col-span-2">
-          <div className="mb-4 flex items-center gap-2">
-            <HiOutlineChartPie className="h-5 w-5 text-primary-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Taux d'occupation</h3>
-          </div>
-          <div className="h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={occupancyPieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={90}
-                  paddingAngle={4}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                  labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
-                >
-                  {occupancyPieData.map((entry, index) => (
-                    <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgb(0 0 0 / 0.1)' }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      {/* Bottom section */}
+      {/* Alerts section - BEFORE charts for clear piloting */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Overdue invoices */}
         <Card>
@@ -301,6 +266,65 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HiOutlineChartBarSquare className="h-5 w-5 text-primary-500" />
+              <h3 className="text-sm font-semibold text-slate-900">Revenus mensuels</h3>
+            </div>
+            <span className="text-xs text-slate-400">12 derniers mois</span>
+          </div>
+          <div className="h-64 sm:h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.revenueByMonth || []} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v) => `${v}\u20AC`} axisLine={false} tickLine={false} width={60} />
+                <Tooltip
+                  formatter={(value) => formatCurrency(value)}
+                  contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgb(0 0 0 / 0.1)', fontSize: 13 }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="expected" name="Facture" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="collected" name="Encaisse" fill="#a5b4fc" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <div className="mb-4 flex items-center gap-2">
+            <HiOutlineChartPie className="h-5 w-5 text-primary-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Taux d'occupation</h3>
+          </div>
+          <div className="h-64 sm:h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={occupancyPieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={90}
+                  paddingAngle={4}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                  labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
+                >
+                  {occupancyPieData.map((entry, index) => (
+                    <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 24px rgb(0 0 0 / 0.1)' }} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
       </div>
     </motion.div>

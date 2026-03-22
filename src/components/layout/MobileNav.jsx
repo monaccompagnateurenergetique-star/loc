@@ -4,7 +4,11 @@ import {
   HiOutlineHomeModern,
   HiOutlineUsers,
   HiOutlineDocumentText,
+  HiOutlineReceiptPercent,
   HiOutlineEllipsisHorizontal,
+  HiOutlineBuildingLibrary,
+  HiOutlineBanknotes,
+  HiOutlineCog6Tooth,
 } from 'react-icons/hi2'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -12,15 +16,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 const mainItems = [
   { label: 'Accueil', icon: HiOutlineChartBarSquare, to: '/', exact: true },
   { label: 'Biens', icon: HiOutlineHomeModern, to: '/properties' },
-  { label: 'Locataires', icon: HiOutlineUsers, to: '/tenants' },
+  { label: 'Factures', icon: HiOutlineReceiptPercent, to: '/invoices' },
   { label: 'Baux', icon: HiOutlineDocumentText, to: '/leases' },
 ]
 
 const moreItems = [
-  { label: 'Structures', to: '/structures' },
-  { label: 'Facturation', to: '/invoices' },
-  { label: 'Paiements', to: '/payments' },
-  { label: 'Parametres', to: '/settings' },
+  { label: 'Structures', icon: HiOutlineBuildingLibrary, to: '/structures' },
+  { label: 'Locataires', icon: HiOutlineUsers, to: '/tenants' },
+  { label: 'Paiements', icon: HiOutlineBanknotes, to: '/payments' },
+  { label: 'Parametres', icon: HiOutlineCog6Tooth, to: '/settings' },
 ]
 
 export default function MobileNav() {
@@ -59,12 +63,13 @@ export default function MobileNav() {
                     key={item.to}
                     to={item.to}
                     onClick={() => setShowMore(false)}
-                    className={`rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-3 rounded-xl px-4 py-4 text-sm font-medium transition-colors ${
                       isActive(item)
                         ? 'bg-primary-50 text-primary-700'
                         : 'bg-slate-50 text-slate-700 active:bg-slate-100'
                     }`}
                   >
+                    {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
                     {item.label}
                   </Link>
                 ))}

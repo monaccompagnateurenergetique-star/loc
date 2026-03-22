@@ -23,6 +23,7 @@ import SearchInput from '../components/ui/SearchInput'
 import InputField from '../components/ui/InputField'
 import SelectField from '../components/ui/SelectField'
 import EmptyState from '../components/ui/EmptyState'
+import FilterBar from '../components/ui/FilterBar'
 import { usePropertyStore } from '../store/propertyStore'
 import { useStructureStore } from '../store/structureStore'
 import { useLeaseStore } from '../store/leaseStore'
@@ -180,30 +181,27 @@ export default function PropertiesPage() {
         }
       />
 
-      {/* Filters - responsive */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <FilterBar activeCount={[typeFilter, statusFilter, structureFilter].filter(Boolean).length}>
         <SearchInput value={search} onChange={setSearch} placeholder="Rechercher un bien..." className="w-full sm:w-64" />
-        <div className="flex flex-wrap gap-2">
-          <SelectField
-            options={[{ value: '', label: 'Tous les types' }, ...propertyTypeOptions]}
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="w-full sm:w-40"
-          />
-          <SelectField
-            options={[{ value: '', label: 'Tous les statuts' }, ...statusOptions]}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full sm:w-40"
-          />
-          <SelectField
-            options={[{ value: '', label: 'Toutes structures' }, ...structureOptions]}
-            value={structureFilter}
-            onChange={(e) => setStructureFilter(e.target.value)}
-            className="w-full sm:w-44"
-          />
-        </div>
-      </div>
+        <SelectField
+          options={[{ value: '', label: 'Tous les types' }, ...propertyTypeOptions]}
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="w-full sm:w-40"
+        />
+        <SelectField
+          options={[{ value: '', label: 'Tous les statuts' }, ...statusOptions]}
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="w-full sm:w-40"
+        />
+        <SelectField
+          options={[{ value: '', label: 'Toutes structures' }, ...structureOptions]}
+          value={structureFilter}
+          onChange={(e) => setStructureFilter(e.target.value)}
+          className="w-full sm:w-44"
+        />
+      </FilterBar>
 
       {filtered.length === 0 ? (
         <EmptyState

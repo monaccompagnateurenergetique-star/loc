@@ -8,6 +8,7 @@ import Table from '../components/ui/Table'
 import InputField from '../components/ui/InputField'
 import SelectField from '../components/ui/SelectField'
 import EmptyState from '../components/ui/EmptyState'
+import FilterBar from '../components/ui/FilterBar'
 import { usePaymentStore } from '../store/paymentStore'
 import { useInvoiceStore } from '../store/invoiceStore'
 import { useTenantStore } from '../store/tenantStore'
@@ -153,29 +154,28 @@ export default function PaymentsPage() {
         }
       />
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      <FilterBar activeCount={[filterDateFrom, filterDateTo, filterMethod].filter(Boolean).length}>
         <InputField
           type="date"
+          label="Du"
           value={filterDateFrom}
           onChange={(e) => setFilterDateFrom(e.target.value)}
-          placeholder="Du"
-          className="w-40"
+          className="w-full sm:w-40"
         />
         <InputField
           type="date"
+          label="Au"
           value={filterDateTo}
           onChange={(e) => setFilterDateTo(e.target.value)}
-          placeholder="Au"
-          className="w-40"
+          className="w-full sm:w-40"
         />
         <SelectField
           options={allMethodOptions}
           value={filterMethod}
           onChange={(e) => setFilterMethod(e.target.value)}
-          className="w-48"
+          className="w-full sm:w-48"
         />
-      </div>
+      </FilterBar>
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -188,6 +188,27 @@ export default function PaymentsPage() {
           columns={columns}
           data={filtered}
           emptyMessage="Aucun paiement enregistre"
+          mobileRender={(row) => {
+            const t = tenants.find((t) => t.id === row.tenant_id)
+            const inv = invoices.find((i) => i.id === row.invoice_id)
+            const p = inv ? properties.find((p) => p.id === inv.property_id) : null
+            return (
+              <div className="rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {t ? `${t.first_name} ${t.last_name}` : '-'}
+                  </p>
+                  <span className="text-sm font-bold text-emerald-700">{formatCurrency(row.amount)}</span>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between text-xs text-slate-500">
+                  <span>{formatDate(row.date)}</span>
+                  <span>{PAYMENT_METHODS[row.method] || row.method}</span>
+                </div>
+                {p && <p className="mt-1 text-xs text-slate-400">{p.name}</p>}
+                {row.reference && <p className="mt-0.5 text-xs text-slate-400 font-mono">{row.reference}</p>}
+              </div>
+            )
+          }}
         />
       )}
 

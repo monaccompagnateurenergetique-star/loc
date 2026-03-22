@@ -20,6 +20,7 @@ import InputField from '../components/ui/InputField'
 import SelectField from '../components/ui/SelectField'
 import Table from '../components/ui/Table'
 import EmptyState from '../components/ui/EmptyState'
+import Breadcrumb from '../components/ui/Breadcrumb'
 import { usePropertyStore } from '../store/propertyStore'
 import { useStructureStore } from '../store/structureStore'
 import { useLeaseStore } from '../store/leaseStore'
@@ -139,9 +140,10 @@ export default function PropertyDetailPage() {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <Button variant="ghost" size="sm" icon={HiOutlineArrowLeft} onClick={() => navigate('/properties')}>
-        Retour
-      </Button>
+      <Breadcrumb items={[
+        { label: 'Biens', to: '/properties' },
+        { label: property.name },
+      ]} />
 
       <PageHeader
         title={property.name}
